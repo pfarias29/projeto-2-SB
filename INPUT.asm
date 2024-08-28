@@ -22,7 +22,6 @@ input:
     push ebp
     mov  ebp, esp
 
-    push eax
     push ebx
     push ecx
     push edx
@@ -68,8 +67,7 @@ input:
     pop  edx
     pop  ecx
     pop  ebx
-    pop  eax
     pop  ebp
-    ret         ;coloca ret 16? acho que não
+    ret         ;coloca ret 12? acho que não
 
 
