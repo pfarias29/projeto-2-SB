@@ -40,7 +40,7 @@ input:
     mov  edx, [esp]     ;aqui recebe a quantidade de bytes lidos
     mov  ecx, edx
     add  ecx, 0x30
-    mov  [ecx + 1], 0
+    mov  byte [ecx + 1], 0
 
     mov  eax, 4
     mov  ebx, 1
@@ -58,9 +58,9 @@ input:
 
 parse_int:
 
-    mov  al, [res + ebx]
+    mov  al, [ebp + 4 + ebx]
     sub  al, 0x30
-    mov  [res + ebx], al
+    mov  [ebp + 4 + ebx], al
 
     inc  ebx
     loop parse_int

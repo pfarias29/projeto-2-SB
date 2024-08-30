@@ -22,15 +22,16 @@ output:
     push edx
 
     mov  ecx, 0
-    mov  eax, [res]     ;eax recebe o número a ser transformado em string
+    mov  eax, res       ;eax recebe o número a ser transformado em string
 
 div_num:
 
     cdq                 ;edx recebe o sinal extendido de eax
-    div  10             ;quociente = eax, resto = edx
+    mov  esi, 10
+    div  esi             ;quociente = eax, resto = edx
 
     add  edx, 0x30
-    mov  [res + ecx], edx
+    mov  [ebp + 4 + ecx], edx
     
     inc  ecx
 
@@ -38,7 +39,7 @@ div_num:
     jne  div_num
 
     inc  ecx            ;as linhas seguintes colocam o 0 no final da string
-    mov  [res + ecx], 0
+    mov  byte [ebp + 4 + ecx], 0
 
     ;printar o número em string
 
@@ -62,7 +63,7 @@ div_num:
     mov  edx, [esp]
     mov  ecx, edx
     add  ecx, 0x30      ;transforma o tamanho em string
-    mov  [ecx + 1], 0
+    mov  byte [ecx + 1], 0
 
     mov  eax, 4
     mov  ebx, 1
