@@ -8,13 +8,9 @@ size_2      EQU $ - msg_2
 
 %define     res [ebp + 4]   ;parâmetro da função para pegar o número
 
-global _start
 global output
 
     section .text
-
-_start:
-
 output:
 
 ;guarda registradores a serem usados

@@ -7,12 +7,9 @@ size_2      EQU $ - msg_2
 
 %define     res [ebp + 4]   ;parâmetro da função para devolver o número
 
-global _start
 global input
 
     section .text
-
-_start:
 
 input:
 
