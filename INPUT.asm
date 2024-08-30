@@ -31,7 +31,7 @@ input:
     mov  edx, 4
     int  80h
 
-    push eax    ;aqui guarda na pilha a quantidade de bytes lidos
+    push eax            ;aqui guarda na pilha a quantidade de bytes lidos
 
 ;printa quantos bytes foram lidos
     mov  eax, 4
@@ -40,8 +40,10 @@ input:
     mov  edx, size_1
     int  80h
 
-    mov  edx, [esp]   ;aqui recebe a quantidade de bytes lidos
-    mov  ecx, [esp]
+    mov  edx, [esp]     ;aqui recebe a quantidade de bytes lidos
+    mov  ecx, edx
+    add  ecx, 0x30
+    mov  [ecx + 1], 0
 
     mov  eax, 4
     mov  ebx, 1
