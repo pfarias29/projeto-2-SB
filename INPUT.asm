@@ -1,19 +1,20 @@
-    section .data
+section .data
 
 msg_1       db "Foram lidos ", 0
 size_1      EQU $ - msg_1
 msg_2       db " byte(s)", 0xA
 size_2      EQU $ - msg_2
+buffer      db 11 dup(0)  ; Buffer para armazenar até 10 dígitos mais o terminador null
 
-%define     res [ebp + 4]   ;parâmetro da função para devolver o número
+%define     res [ebp + 4]   ; Parâmetro da função para devolver o número
 
 global input
 
-    section .text
+section .text
 
 input:
 
-;guarda registradores a serem usados
+; Guarda registradores a serem usados
     push ebp
     mov  ebp, esp
 
@@ -21,54 +22,55 @@ input:
     push ecx
     push edx
 
-;recebe entrada do número
+; Recebe entrada do número
     mov  eax, 3
     mov  ebx, 0
     mov  ecx, res
     mov  edx, 4
     int  80h
 
-    push eax            ;aqui guarda na pilha a quantidade de bytes lidos
+    push eax            ; Guarda na pilha a quantidade de bytes lidos
 
-;printa quantos bytes foram lidos
+; Converte o número de bytes lidos para string
+    mov  eax, [esp]     ; Carrega o número de bytes lidos
+    lea  edi, [buffer + 10] ; Aponta para o final do buffer
+    mov  byte [edi], 0  ; Adiciona terminador null
+
+convert_to_string:
+    mov  edx, 0
+    mov  ebx, 10
+    div  ebx            ; Divide EAX por 10, EAX = quociente, EDX = resto
+    add  dl, '0'        ; Converte o resto para caractere ASCII
+    dec  edi            ; Move para o próximo espaço no buffer
+    mov  [edi], dl      ; Armazena o caractere
+    test eax, eax       ; Verifica se o quociente é 0
+    jnz  convert_to_string
+
+; Printa a mensagem
     mov  eax, 4
     mov  ebx, 1
     mov  ecx, msg_1
     mov  edx, size_1
     int  80h
 
-    mov  edx, [esp]     ;aqui recebe a quantidade de bytes lidos
-    mov  ecx, edx
-    add  ecx, 0x30
-    mov  byte [ecx + 1], 0
-
+; Printa o número convertido
+    lea  ecx, [edi]
+    mov  edx, [buffer + 10 - edi]
     mov  eax, 4
     mov  ebx, 1
     int  80h
 
+; Printa a mensagem final
     mov  eax, 4
     mov  ebx, 1
     mov  ecx, msg_2
     mov  edx, size_2
     int  80h
 
-;transforma o número bara binário
-    mov  ecx, [esp]        ;ecx recebe a quantidade de bytes lidos para fazer um loop
-    mov  ebx, 0
-
-parse_int:
-
-    mov  al, [ebp + 4 + ebx]
-    sub  al, 0x30
-    mov  [ebp + 4 + ebx], al
-
-    inc  ebx
-    loop parse_int
-
-    pop  eax               ; eax recebe a quantidade de bytes lidos para retornar a função
-
+; Restaura registradores e sai da função
     pop  edx
     pop  ecx
     pop  ebx
+    mov  esp, ebp
     pop  ebp
     ret
