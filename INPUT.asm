@@ -38,25 +38,11 @@ skip_adjustment:
 
     push eax            ; Guarda na pilha a quantidade de bytes lidos
 
-; Zera registradores usados para conversão
+; Converte a string em um número
     xor  eax, eax        ; Zera EAX para armazenar o resultado
     xor  ebx, ebx        ; Zera EBX para usar como multiplicador de 10
     lea  esi, [buffer]   ; Aponta para o início do buffer
 
-; Verifica se o número é negativo
-    mov  bl, [esi]       ; Carrega o primeiro caractere
-    cmp  bl, '-'         ; Verifica se é um sinal de menos
-    jne  continue_conversion ; Se não for, continua a conversão normal
-
-; Se for um sinal de menos, prepara para número negativo
-    inc  esi             ; Pula o caractere '-'
-    mov  ecx, 1          ; Marca que o número é negativo
-    jmp  start_conversion
-
-continue_conversion:
-    xor  ecx, ecx        ; Marca que o número é positivo
-
-start_conversion:
 convert_to_number:
     mov  bl, [esi]       ; Carrega o próximo caractere
     test bl, bl          ; Verifica se é o terminador null
@@ -70,30 +56,28 @@ convert_to_number:
     jmp  convert_to_number ; Repete para o próximo dígito
 
 done_conversion:
-    test ecx, ecx        ; Verifica se o número era negativo
-    jz   store_result    ; Se não era, pula a inversão de sinal
-    neg  eax             ; Inverte o sinal de EAX para tornar o número negativo
-
-store_result:
     mov  [res], eax      ; Armazena o número convertido em res ([ebp + 4])
 
-; Printa a mensagem de quantos bytes foram lidos
+; Calcula o comprimento da string para impressão
+    lea  eax, [char_buffer + 10]  ; Carrega o endereço final do buffer
+    sub  eax, edi                 ; Subtrai o ponteiro atual para obter o tamanho
+    mov  edx, eax                 ; Armazena o comprimento em EDX
+
+; Printa a mensagem
     mov  eax, 4
     mov  ebx, 1
     mov  ecx, msg_1
     mov  edx, size_1
     int  80h
 
-    pop  eax             ; Recupera a quantidade de bytes lidos
-    add  eax, '0'        ; Converte o número de bytes para caractere ASCII
-
-    mov  ecx, eax        ; Prepara o caractere ASCII para impressão
+; Printa o número convertido
+    lea  ecx, [edi]
+    mov  edx, eax                 ; Usa o valor calculado anteriormente
     mov  eax, 4
     mov  ebx, 1
-    mov  edx, 1          ; O caractere é de 1 byte
     int  80h
 
-; Printa a mensagem final " byte(s)"
+; Printa a mensagem final
     mov  eax, 4
     mov  ebx, 1
     mov  ecx, msg_2
