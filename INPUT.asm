@@ -12,7 +12,6 @@ char_buffer db 11 dup(0)        ; Buffer para armazenar até 10 dígitos mais o 
 global input
 
 section .text
-
 input:
 
 ; Guarda registradores a serem usados
@@ -48,7 +47,7 @@ convert_to_number:
     test bl, bl          ; Verifica se é o terminador null
     jz   done_conversion ; Se for, termina a conversão
 
-    sub  bl, '0'         ; Converte o caractere ASCII para um valor numérico
+    sub  bl, 0x30        ; Converte o caractere ASCII para um valor numérico
     imul eax, eax, 10    ; Multiplica o valor atual em EAX por 10
     add  eax, ebx        ; Adiciona o novo dígito ao valor em EAX
 
@@ -56,12 +55,27 @@ convert_to_number:
     jmp  convert_to_number ; Repete para o próximo dígito
 
 done_conversion:
-    mov  [res], eax      ; Armazena o número convertido em res ([ebp + 4])
+    mov  res, eax      ; Armazena o número convertido em res ([ebp + 4])
 
-; Calcula o comprimento da string para impressão
-    lea  eax, [char_buffer + 10]  ; Carrega o endereço final do buffer
-    sub  eax, edi                 ; Subtrai o ponteiro atual para obter o tamanho
-    mov  edx, eax                 ; Armazena o comprimento em EDX
+; Transforma a quantidade de bytes lidos em string
+    mov  eax, [esp]                 ; eax recebe o número de bytes lidos na pilha
+    lea  edi, [char_buffer + 10]    ; edi aponta para o final do buffer
+    mov  byte [edi], 0              ; Adiciona o terminador nulo
+
+convert_to_string:
+    mov  edx, 0
+    mov  ebx, 10
+    div  ebx            ; Divide eax por 10; eax = quociente; edx = resto
+    add  dl, 0x30
+    dec  edi            ; Move para o próximo espaço no buffer
+    mov  [edi], dl
+    test eax, eax      ; Se for nulo, acabou
+    jnz  convert_to_string
+
+; Calcula o tamanho da string
+    lea  eax, [char_buffer + 10]
+    sub  eax, edi
+    mov  edx, eax
 
 ; Printa a mensagem
     mov  eax, 4
@@ -70,9 +84,13 @@ done_conversion:
     mov  edx, size_1
     int  80h
 
+; Calcula o tamanho da string
+    lea  eax, [char_buffer + 10]
+    sub  eax, edi
+    mov  edx, eax
+
 ; Printa o número convertido
     lea  ecx, [edi]
-    mov  edx, eax                 ; Usa o valor calculado anteriormente
     mov  eax, 4
     mov  ebx, 1
     int  80h
@@ -85,9 +103,9 @@ done_conversion:
     int  80h
 
 ; Restaura registradores e sai da função
+    pop  eax
     pop  edx
     pop  ecx
     pop  ebx
-    mov  esp, ebp
     pop  ebp
     ret
