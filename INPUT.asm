@@ -33,40 +33,67 @@ input:
     cmp  byte [buffer + eax - 1], 0x0A  ; Verifica se o último byte é '\n'
     jne  skip_adjustment                ; Se não for, pula o ajuste
     dec  eax                            ; Subtrai 1 byte da contagem
+    mov  byte [buffer + eax], 0         ; Substitui '\n' por terminador null
 skip_adjustment:
 
     push eax            ; Guarda na pilha a quantidade de bytes lidos
 
-; Converte o número de bytes lidos para string
-    mov  eax, [esp]     ; Carrega o número de bytes lidos
-    lea  edi, [char_buffer + 10] ; Aponta para o final do buffer
-    mov  byte [edi], 0  ; Adiciona terminador null
+; Zera registradores usados para conversão
+    xor  eax, eax        ; Zera EAX para armazenar o resultado
+    xor  ebx, ebx        ; Zera EBX para usar como multiplicador de 10
+    lea  esi, [buffer]   ; Aponta para o início do buffer
 
-convert_to_string:
-    mov  edx, 0
-    mov  ebx, 10
-    div  ebx            ; Divide EAX por 10, EAX = quociente, EDX = resto
-    add  dl, '0'        ; Converte o resto para caractere ASCII
-    dec  edi            ; Move para o próximo espaço no buffer
-    mov  [edi], dl      ; Armazena o caractere
-    test eax, eax       ; Verifica se o quociente é 0
-    jnz  convert_to_string
+; Verifica se o número é negativo
+    mov  bl, [esi]       ; Carrega o primeiro caractere
+    cmp  bl, '-'         ; Verifica se é um sinal de menos
+    jne  continue_conversion ; Se não for, continua a conversão normal
 
-; Printa a mensagem
+; Se for um sinal de menos, prepara para número negativo
+    inc  esi             ; Pula o caractere '-'
+    mov  ecx, 1          ; Marca que o número é negativo
+    jmp  start_conversion
+
+continue_conversion:
+    xor  ecx, ecx        ; Marca que o número é positivo
+
+start_conversion:
+convert_to_number:
+    mov  bl, [esi]       ; Carrega o próximo caractere
+    test bl, bl          ; Verifica se é o terminador null
+    jz   done_conversion ; Se for, termina a conversão
+
+    sub  bl, '0'         ; Converte o caractere ASCII para um valor numérico
+    imul eax, eax, 10    ; Multiplica o valor atual em EAX por 10
+    add  eax, ebx        ; Adiciona o novo dígito ao valor em EAX
+
+    inc  esi             ; Avança para o próximo caractere
+    jmp  convert_to_number ; Repete para o próximo dígito
+
+done_conversion:
+    test ecx, ecx        ; Verifica se o número era negativo
+    jz   store_result    ; Se não era, pula a inversão de sinal
+    neg  eax             ; Inverte o sinal de EAX para tornar o número negativo
+
+store_result:
+    mov  [res], eax      ; Armazena o número convertido em res ([ebp + 4])
+
+; Printa a mensagem de quantos bytes foram lidos
     mov  eax, 4
     mov  ebx, 1
     mov  ecx, msg_1
     mov  edx, size_1
     int  80h
 
-; Printa o número convertido
-    lea  ecx, [edi]
-    mov  edx, char_buffer + 10 - edi
+    pop  eax             ; Recupera a quantidade de bytes lidos
+    add  eax, '0'        ; Converte o número de bytes para caractere ASCII
+
+    mov  ecx, eax        ; Prepara o caractere ASCII para impressão
     mov  eax, 4
     mov  ebx, 1
+    mov  edx, 1          ; O caractere é de 1 byte
     int  80h
 
-; Printa a mensagem final
+; Printa a mensagem final " byte(s)"
     mov  eax, 4
     mov  ebx, 1
     mov  ecx, msg_2
