@@ -7,7 +7,7 @@ size_2      EQU $ - msg_2
 buffer      db 4 dup(0)         ; Buffer para armazenar os caracteres lidos (máx 4 bytes)
 char_buffer db 11 dup(0)        ; Buffer para armazenar até 10 dígitos mais o terminador null
 
-%define     res [ebp + 4]       ; Parâmetro da função para devolver o número
+%define     res [ebp + 8]       ; Parâmetro da função para devolver o número
 
 global input
 
@@ -21,6 +21,8 @@ input:
     push ebx
     push ecx
     push edx
+    push edi
+    push esi
 
 ; Recebe entrada do número
     mov  eax, 3
@@ -103,7 +105,10 @@ convert_to_string:
     int  80h
 
 ; Restaura registradores e sai da função
+
     pop  eax
+    pop  esi
+    pop  edi
     pop  edx
     pop  ecx
     pop  ebx
