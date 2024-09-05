@@ -1,11 +1,11 @@
 section .data
-
 msg_1       db "Foram lidos ", 0
 size_1      EQU $ - msg_1
 msg_2       db " byte(s)", 0xA
 size_2      EQU $ - msg_2
 buffer      db 4 dup(0)         ; Buffer para armazenar os caracteres lidos (máx 4 bytes)
 char_buffer db 11 dup(0)        ; Buffer para armazenar até 10 dígitos mais o terminador null
+neg_msg     db "-", 0           ; Mensagem para números negativos
 
 %define     res [ebp + 8]       ; Parâmetro da função para devolver o número
 
@@ -39,12 +39,26 @@ skip_adjustment:
 
     push eax            ; Guarda na pilha a quantidade de bytes lidos
 
+; Checa se o número é negativo
+    mov  esi, buffer
+    mov  bl, [esi]      ; Carrega o primeiro caractere
+    cmp  bl, '-'        ; Verifica se é um sinal de menos
+    jne  positive_number ; Se não for, continua normalmente
+
+; Trata número negativo
+    inc  esi            ; Avança para o próximo caractere, ignorando o sinal
+    mov  ecx, 1         ; Marca que o número é negativo
+    jmp  convert_to_number
+
+positive_number:
+    xor  ecx, ecx       ; Zera o sinal, ou seja, o número é positivo
+
 ; Converte a string em um número
+convert_to_number:
     xor  eax, eax        ; Zera EAX para armazenar o resultado
     xor  ebx, ebx        ; Zera EBX para usar como multiplicador de 10
-    lea  esi, [buffer]   ; Aponta para o início do buffer
 
-convert_to_number:
+convert_loop:
     mov  bl, [esi]       ; Carrega o próximo caractere
     test bl, bl          ; Verifica se é o terminador null
     jz   done_conversion ; Se for, termina a conversão
@@ -54,9 +68,14 @@ convert_to_number:
     add  eax, ebx        ; Adiciona o novo dígito ao valor em EAX
 
     inc  esi             ; Avança para o próximo caractere
-    jmp  convert_to_number ; Repete para o próximo dígito
+    jmp  convert_loop    ; Repete para o próximo dígito
 
 done_conversion:
+    cmp  ecx, 0          ; Verifica se o número é negativo
+    je   store_result    ; Se não for, pula para armazenar o resultado
+    neg  eax             ; Caso contrário, torna o número negativo
+
+store_result:
     mov  res, eax      ; Armazena o número convertido em res ([ebp + 4])
 
 ; Transforma a quantidade de bytes lidos em string
@@ -74,10 +93,6 @@ convert_to_string:
     test eax, eax      ; Se for nulo, acabou
     jnz  convert_to_string
 
-; Calcula o tamanho da string
-    lea  eax, [char_buffer + 10]
-    sub  eax, edi
-    mov  edx, eax
 
 ; Printa a mensagem
     mov  eax, 4
@@ -90,8 +105,8 @@ convert_to_string:
     lea  eax, [char_buffer + 10]
     sub  eax, edi
     mov  edx, eax
-
-; Printa o número convertido
+    
+print_number:
     lea  ecx, [edi]
     mov  eax, 4
     mov  ebx, 1
