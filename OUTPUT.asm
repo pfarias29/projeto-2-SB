@@ -6,22 +6,9 @@ size_2      EQU $ - msg_2
 
 buffer      db 20 dup(0)
 
+global output
+
 section .text
-global _start
-
-_start:
-    ; Define o número a ser convertido
-    mov  eax, 123                 ; Substitua 1234 pelo número desejado
-
-    ; Simule uma chamada de função passando o número
-    push eax                       ; Empilha o número para simular o parâmetro
-
-    call output                    ; Chama a função
-
-    ; Sair do programa
-    mov eax, 1
-    xor ebx, ebx
-    int 80h
 
 output:
     ; Guarda os registradores a serem usados
