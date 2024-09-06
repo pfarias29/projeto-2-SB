@@ -78,6 +78,14 @@ output_number_to_string:
     cmp eax, 0
     je handle_zero
 
+    ; Verifica se o número é negativo
+    cmp eax, 0
+    jge positive_number            ; Se for positivo, pula
+    neg eax                        ; Caso contrário, torna positivo
+    mov byte [esi], '-'            ; Armazena o sinal de menos no buffer
+    inc ecx                        ; Atualiza o contador
+
+positive_number:
 convert_to_string:
     cdq                            ; edx:eax = eax
     mov ebx, 10
@@ -88,10 +96,12 @@ convert_to_string:
     test eax, eax                  ; Verifica se EAX é 0
     jnz convert_to_string          ; Se não for, continua a conversão
 
-    ; Inverte a string
     mov ebx, ecx                   ; EBX = número de dígitos
     dec ebx                        ; Ajusta para indexação zero
     mov edi, esi                   ; EDI = início do buffer
+
+    cmp byte [esi], '-'        ; Checa se o número é negativo
+    je skip_minus                  ; Se for, ajusta para não inverter o '-'
 
 reverse_string:
     mov dl, [edi]                  ; DL = caractere à esquerda
@@ -102,10 +112,13 @@ reverse_string:
     inc edi                        ; Move para o próximo caractere
     dec ebx                        ; Move para o caractere anterior
 
-    cmp edi, [esi + ebx]            ; Compara EDI com o ponto médio
-    jl reverse_string             ; Continua se não atingiu o ponto médio
-
+    cmp edi, ebx                   ; Compara os índices para parar a inversão
+    jl reverse_string              ; Continua se não atingiu o ponto médio
     jmp done_conversion
+
+skip_minus:
+    inc edi                        ; Pula o sinal de menos para não inverter
+    jmp reverse_string             ; Continua a inversão
 
 handle_zero:
     mov byte [esi], 0x30           ; Se o número é 0, escreve '0' no buffer
