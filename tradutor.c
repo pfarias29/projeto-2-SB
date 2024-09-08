@@ -296,6 +296,7 @@ void translate(int *instructions, int size, FILE *outputFile) {
                 break;
             case 3: // MUL
                 if (i + 1 < size) {
+                    fprintf(outputFile, "    cdq\n");
                     fprintf(outputFile, "    imul eax, [mem + %d]\n", instructions[++i]);
                     fprintf(outputFile, "    jo overflow_handler\n");
                 } else {
