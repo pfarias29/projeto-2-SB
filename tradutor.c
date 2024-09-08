@@ -297,10 +297,18 @@ void translate(int *instructions, int size, FILE *outputFile) {
             case 3: // MUL
                 if (i + 1 < size) {
                     fprintf(outputFile, "    cdq\n");
-                    fprintf(outputFile, "    imul eax, [mem + %d]\n", instructions[++i]);
+                    fprintf(outputFile, "    imul [mem + %d]\n", instructions[++i]);
                     fprintf(outputFile, "    jo overflow_handler\n");
                 } else {
                     fprintf(outputFile, "    ; Error: Missing operand for MUL\n");
+                }
+                break;
+            case 4: // DIV
+                if (i + 1 < size) {
+                    fprintf(outputFile, "    idiv [mem + %d]\n", instructions[++i]);
+                    fprintf(outputFile, "    jo overflow_handler\n");
+                } else {
+                    fprintf(outputFile, "    ; Error: Missing operand for DIV\n");
                 }
                 break;
             case 5: // JMP
