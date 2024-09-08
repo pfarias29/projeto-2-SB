@@ -1,10 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Declaração das funções externas
-extern void input_function();
-extern void output_function();
-
 // Função para traduzir código de máquina para IA-32 Assembly
 void translate(int *instructions, int size, FILE *outputFile) {
     fprintf(outputFile, "section .text\n");
