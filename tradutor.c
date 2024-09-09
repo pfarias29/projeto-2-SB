@@ -273,6 +273,7 @@ done_conversion:
 
 // Função para traduzir código de máquina para IA-32 Assembly
 void translate(int *instructions, int size, FILE *outputFile) {
+    int inputFlag, outputFlag = 0;
     fprintf(outputFile, "section .text\n");
     fprintf(outputFile, "global _start\n");
     fprintf(outputFile, "_start:\n");
@@ -363,20 +364,20 @@ void translate(int *instructions, int size, FILE *outputFile) {
                 break;
             case 12: // INPUT
                 if (i + 1 < size) {
-                    fprintf(outputFile, "    extern input\n");
                     fprintf(outputFile, "    push dword [mem + %d]\n", instructions[++i]);
                     fprintf(outputFile, "    call input\n");
                     fprintf(outputFile, "    add esp, 4\n");
+                    inputFlag = 1;
                 } else {
                     fprintf(outputFile, "    ; Error: Missing operand for INPUT\n");
                 }
                 break;
             case 13: // OUTPUT
                 if (i + 1 < size) {
-                    fprintf(outputFile, "    extern output\n");
                     fprintf(outputFile, "    push dword [mem + %d]\n", instructions[++i]);
                     fprintf(outputFile, "    call output\n");
                     fprintf(outputFile, "    add esp, 4\n");
+                    outputFlag = 1;
                 } else {
                     fprintf(outputFile, "    ; Error: Missing operand for OUTPUT\n");
                 }
@@ -395,6 +396,36 @@ void translate(int *instructions, int size, FILE *outputFile) {
     fprintf(outputFile, "\noverflow_handler:\n");
     fprintf(outputFile, "    mov eax, 1\n");
     fprintf(outputFile, "    int 0x80\n");
+
+    fprintf(outputFile, "\n\n");
+
+    if (inputFlag) {
+        FILE *inputFile = fopen("INPUT.asm", "r");
+        if (!inputFile) {
+            perror("Erro ao abrir arquivo INPUT.asm");
+            return;
+        }
+        char line[256];  
+        while (fgets(line, sizeof(line), inputFile)) {
+            fprintf(outputFile, "%s", line);  
+        }
+        fclose(inputFile);
+    }
+
+    fprintf(outputFile, "\n\n");
+
+    if (outputFlag) {
+        FILE *inputFile = fopen("OUTPUT.asm", "r");
+        if (!inputFile) {
+            perror("Erro ao abrir arquivo OUTPUT.asm");
+            return;
+        }
+        char line[256];  
+        while (fgets(line, sizeof(line), inputFile)) {
+            fprintf(outputFile, "%s", line);  
+        }
+        fclose(inputFile);
+    }
 
 
 }
